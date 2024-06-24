@@ -1,6 +1,5 @@
 export const BASIC_PARAMS = {
-  serviceKey:
-    'yOKfglgPtpI4epdJjSnd1qOxl%2BbgcmrZXYIaFaK8TrHDLXeBT%2F5fNnrWt6%2Bwrez%2BhZWRhbek6l1YOQsaapnE2w%3D%3D',
+  // serviceKey: process.env.SERVICE_KEY,
   _type: 'json',
   numOfRows: 100,
   pageNo: 1,
@@ -10,6 +9,7 @@ export const BASIC_PARAMS = {
 
 export const makeQueryString = (obj?: object) => {
   const params = {
+    serviceKey: process.env.SERVICE_KEY,
     ...BASIC_PARAMS,
     ...obj,
   };

@@ -29,7 +29,6 @@ export class TourService {
 
   async getPetTourInfo() {
     const queryString = makeQueryString();
-    console.log('queryString', queryString);
     const url =
       'https://apis.data.go.kr/B551011/KorService1/detailPetTour1' +
       queryString;
