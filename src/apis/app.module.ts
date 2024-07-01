@@ -2,11 +2,11 @@ import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TourModule } from './tour/tour.module';
+import { MailModule } from './mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    TourModule,
     CacheModule.register({
       isGlobal: true,
     }),
@@ -15,6 +15,8 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       cache: true,
     }),
+    TourModule,
+    MailModule,
   ],
   providers: [
     {
