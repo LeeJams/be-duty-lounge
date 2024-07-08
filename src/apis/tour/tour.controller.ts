@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { TourService } from './tour.service';
 
 @Controller()
@@ -18,5 +18,30 @@ export class TourController {
   @Get('bigdata')
   async getBigdata() {
     return await this.tourService.getBigdataInfo();
+  }
+
+  @Get('tour')
+  async getTourInfo(@Query() query) {
+    return await this.tourService.getTourInfo(query.id, query.type);
+  }
+
+  @Get('accommodation')
+  async getAccommodationInfo() {
+    return await this.tourService.getAccommodationInfo();
+  }
+
+  @Get('eco-tour')
+  async getEcoTour() {
+    return await this.tourService.getEcoTourInfo();
+  }
+
+  @Get('go-camping')
+  async getGoCamping() {
+    return await this.tourService.getGoCampingInfo();
+  }
+
+  @Get('disability')
+  async getDisability() {
+    return await this.tourService.getDisabilityTourInfo();
   }
 }

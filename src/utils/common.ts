@@ -8,6 +8,7 @@ export const BASIC_PARAMS = {
 };
 
 export const makeQueryString = (obj?: object) => {
+  console.log('process.env.SERVICE_KEY', process.env.SERVICE_KEY);
   const params = {
     serviceKey: process.env.SERVICE_KEY,
     ...BASIC_PARAMS,

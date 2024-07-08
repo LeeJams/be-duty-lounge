@@ -48,9 +48,85 @@ export class TourService {
       startYmd: '20210601',
       endYmd: '20210630',
     });
-    console.log('queryString', queryString);
     const url =
       'https://apis.data.go.kr/B551011/DataLabService/metcoRegnVisitrDDList' +
+      queryString;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.json();
+  }
+
+  async getTourInfo(id: string, type: string) {
+    const queryString = makeQueryString({ contentId: id, contentTypeId: type });
+    const url =
+      'https://apis.data.go.kr/B551011/KorService1/detailInfo1' + queryString;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.json();
+  }
+
+  async getAccommodationInfo() {
+    const queryString = makeQueryString();
+    const url =
+      'https://apis.data.go.kr/B551011/KorService1/searchStay1' + queryString;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.json();
+  }
+
+  async getEcoTourInfo() {
+    const queryString = makeQueryString();
+    const url =
+      'https://apis.data.go.kr/B551011/GreenTourService1/areaBasedList1' +
+      queryString;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.json();
+  }
+
+  async getGoCampingInfo() {
+    const queryString = makeQueryString();
+    const url =
+      'https://apis.data.go.kr/B551011/GoCamping/basedList' + queryString;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.json();
+  }
+
+  async getDisabilityTourInfo() {
+    const queryString = makeQueryString();
+    const url =
+      'https://apis.data.go.kr/B551011/KorWithService1/areaBasedList1' +
       queryString;
 
     const response = await fetch(url, {
