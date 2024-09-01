@@ -1,9 +1,12 @@
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { TourModule } from './tour/tour.module';
-import { MailModule } from './mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
+import { UserModule } from './user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { ScheduleModule } from './schedule/schedule.module';
+import { ShiftModule } from './shift/shift.module';
 
 @Module({
   imports: [
@@ -15,8 +18,11 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       cache: true,
     }),
-    TourModule,
-    MailModule,
+    UserModule,
+    PrismaModule,
+    AuthModule,
+    ShiftModule,
+    ScheduleModule,
   ],
   providers: [
     {

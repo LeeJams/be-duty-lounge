@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  nickname        String    @db.VarChar(255)
+  email           String    @db.VarChar(255)
+  authProvider    String    @db.VarChar(50)
+  authProviderId  String    @db.VarChar(255)
+  profileImageUrl String?   @db.VarChar(255)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  deletedAt       DateTime?
+
+  // Relation with Shift
+  shifts    Shift[] // One-to-many relationship with Shift
+  schedules Schedule[] // One-to-many relationship with Schedule
+
+  @@unique([email, authProvider])
+}
+
+model Shift {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String   @db.VarChar(255) // 근무조 이름
+  color     String   @db.VarChar(50) // 근무조 색상
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Schedule {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  month     Int // 스케줄이 적용되는 월 (1 ~ 12)
+  year      Int // 스케줄이 적용되는 연도
+  day1      Int? // 1일에 대한 근무조 ID
+  day2      Int? // 2일에 대한 근무조 ID
+  day3      Int? // 3일에 대한 근무조 ID
+  day4      Int? // 4일에 대한 근무조 ID
+  day5      Int? // 5일에 대한 근무조 ID
+  day6      Int? // 6일에 대한 근무조 ID
+  day7      Int? // 7일에 대한 근무조 ID
+  day8      Int? // 8일에 대한 근무조 ID
+  day9      Int? // 9일에 대한 근무조 ID
+  day10     Int? // 10일에 대한 근무조 ID
+  day11     Int? // 11일에 대한 근무조 ID
+  day12     Int? // 12일에 대한 근무조 ID
+  day13     Int? // 13일에 대한 근무조 ID
+  day14     Int? // 14일에 대한 근무조 ID
+  day15     Int? // 15일에 대한 근무조 ID
+  day16     Int? // 16일에 대한 근무조 ID
+  day17     Int? // 17일에 대한 근무조 ID
+  day18     Int? // 18일에 대한 근무조 ID
+  day19     Int? // 19일에 대한 근무조 ID
+  day20     Int? // 20일에 대한 근무조 ID
+  day21     Int? // 21일에 대한 근무조 ID
+  day22     Int? // 22일에 대한 근무조 ID
+  day23     Int? // 23일에 대한 근무조 ID
+  day24     Int? // 24일에 대한 근무조 ID
+  day25     Int? // 25일에 대한 근무조 ID
+  day26     Int? // 26일에 대한 근무조 ID
+  day27     Int? // 27일에 대한 근무조 ID
+  day28     Int? // 28일에 대한 근무조 ID
+  day29     Int? // 29일에 대한 근무조 ID
+  day30     Int? // 30일에 대한 근무조 ID
+  day31     Int? // 31일에 대한 근무조 ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year]) // 동일한 월에 대한 중복 스케줄 방지
+}
