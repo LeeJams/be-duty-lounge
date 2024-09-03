@@ -15,33 +15,33 @@ export class ShiftController {
   constructor(private readonly shiftService: ShiftService) {}
 
   @Post(':userId/default')
-  async createDefaultShifts(@Param('userId') userId: number): Promise<Shift[]> {
-    return this.shiftService.createDefaultShiftsForUser(userId);
+  async createDefaultShifts(@Param('userId') userId: string): Promise<Shift[]> {
+    return this.shiftService.createDefaultShiftsForUser(parseInt(userId, 10));
   }
 
   @Get(':userId')
-  async getShifts(@Param('userId') userId: number): Promise<Shift[]> {
-    return this.shiftService.getShiftsByUserId(userId);
+  async getShifts(@Param('userId') userId: string): Promise<Shift[]> {
+    return this.shiftService.getShiftsByUserId(parseInt(userId, 10));
   }
 
   @Post(':userId')
   async createShift(
-    @Param('userId') userId: number,
+    @Param('userId') userId: string,
     @Body() shiftData: { name: string; color: string },
   ): Promise<Shift> {
-    return this.shiftService.createShift(userId, shiftData);
+    return this.shiftService.createShift(parseInt(userId, 10), shiftData);
   }
 
   @Put(':id')
   async updateShift(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() shiftData: { name?: string; color?: string },
   ): Promise<Shift> {
-    return this.shiftService.updateShift(id, shiftData);
+    return this.shiftService.updateShift(parseInt(id, 10), shiftData);
   }
 
   @Delete(':id')
-  async deleteShift(@Param('id') id: number): Promise<Shift> {
-    return this.shiftService.deleteShift(id);
+  async deleteShift(@Param('id') id: string): Promise<Shift> {
+    return this.shiftService.deleteShift(parseInt(id, 10));
   }
 }

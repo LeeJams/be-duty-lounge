@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
 import { GetUserByEmailDto } from './dto/get-user-by-email.dto';

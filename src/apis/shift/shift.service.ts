@@ -14,27 +14,28 @@ export class ShiftService {
       { name: '오프', color: 'pink' },
     ];
 
-    const shifts = await Promise.all(
-      defaultShifts.map((shift) =>
-        this.prisma.shift.create({
-          data: {
-            userId,
-            ...shift,
-          },
-        }),
-      ),
-    );
+    const shifts = [];
+
+    for (const shift of defaultShifts) {
+      const createdShift = await this.prisma.shift.create({
+        data: {
+          user: { connect: { id: userId } }, // userId를 통한 연결 설정
+          ...shift,
+        },
+      });
+      shifts.push(createdShift);
+    }
 
     return shifts;
   }
 
   async createShift(
     userId: number,
-    shiftData: Prisma.ShiftCreateInput,
+    shiftData: { name: string; color: string },
   ): Promise<Shift> {
     return this.prisma.shift.create({
       data: {
-        userId,
+        user: { connect: { id: userId } }, // userId를 통한 연결 설정
         ...shiftData,
       },
     });
