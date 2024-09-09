@@ -7,24 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id              Int       @id @default(autoincrement())
-  nickname        String    @db.VarChar(255)
-  email           String    @db.VarChar(255)
-  authProvider    String    @db.VarChar(50)
-  authProviderId  String    @db.VarChar(255)
-  profileImageUrl String?   @db.VarChar(255)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @default(now()) @updatedAt
-  deletedAt       DateTime?
-
-  // Relation with Shift
-  shifts    Shift[] // One-to-many relationship with Shift
-  schedules Schedule[] // One-to-many relationship with Schedule
-
-  @@unique([email, authProvider])
-}
-
 model Shift {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -80,4 +62,71 @@ model Schedule {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, month, year]) // 동일한 월에 대한 중복 스케줄 방지
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  content   String   @db.Text // 댓글 내용
+  createdAt DateTime @default(now()) // 댓글 작성일
+  updatedAt DateTime @default(now()) @updatedAt // 댓글 수정일
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  nickname        String    @db.VarChar(255)
+  email           String    @db.VarChar(255)
+  authProvider    String    @db.VarChar(50)
+  authProviderId  String    @db.VarChar(255)
+  profileImageUrl String?   @db.VarChar(255)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  deletedAt       DateTime?
+
+  // 관계 정의
+  posts      Post[] // 유저가 작성한 게시글 (1:N 관계)
+  comments   Comment[] // 유저가 작성한 댓글 (1:N 관계)
+  savedPosts Post[]     @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
+  Shift      Shift[] // 유저가 속한 근무조 (1:N 관계)
+  Schedule   Schedule[] // 유저가 가진 스케줄 (1:N 관계)
+
+  @@unique([email, authProvider])
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  title     String    @db.VarChar(255) // 게시글 제목
+  content   String    @db.Text // 게시글 내용
+  views     Int       @default(0) // 조회수
+  likes     Int       @default(0) // 좋아요 수
+  createdAt DateTime  @default(now()) // 게시글 작성일
+  updatedAt DateTime  @default(now()) @updatedAt // 게시글 수정일
+  comments  Comment[] // 댓글 리스트 (1:N 관계)
+  files     File[] // 게시글에 첨부된 파일들 (1:N 관계)
+  savedBy   User[]    @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  postId    Int // 어떤 게시글의 파일인지
+  url       String   @db.VarChar(255) // 파일의 URL 또는 경로
+  fileType  String   @db.VarChar(100) // 파일의 MIME 타입 (예: image/png, application/pdf)
+  fileSize  Int // 파일의 크기 (바이트 단위)
+  createdAt DateTime @default(now()) // 파일 업로드 시간
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
 }

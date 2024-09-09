@@ -7,9 +7,16 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { ShiftModule } from './shift/shift.module';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // 파일을 제공할 경로 설정
+      serveRoot: '/uploads', // 클라이언트가 접근하는 경로
+    }),
     CacheModule.register({
       isGlobal: true,
     }),
@@ -23,6 +30,7 @@ import { ShiftModule } from './shift/shift.module';
     AuthModule,
     ShiftModule,
     ScheduleModule,
+    FileModule,
   ],
   providers: [
     {
