@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsInt } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreatePostDto {
   @IsNotEmpty()
@@ -10,6 +10,6 @@ export class CreatePostDto {
   content: string;
 
   @IsNotEmpty()
-  @IsInt()
-  userId: number; // 작성자 ID
+  @IsString()
+  userId: string; // 작성자 ID
 }

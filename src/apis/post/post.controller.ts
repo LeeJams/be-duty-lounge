@@ -6,23 +6,26 @@ import {
   UseInterceptors,
   HttpCode,
   HttpStatus,
+  Get,
+  Query,
+  Param,
 } from '@nestjs/common';
 import { PostService } from './post.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { CreatePostDto } from './dto/create-post.dto';
 
 @Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Post('create')
+  @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'files', maxCount: 5 }], {
+    FilesInterceptor('files', 5, {
       storage: diskStorage({
-        destination: './uploads', // 파일 저장 경로
+        destination: './uploads',
         filename: (req, file, cb) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -33,10 +36,22 @@ export class PostController {
     }),
   )
   async createPost(
-    @Body() createPostDto: CreatePostDto,
-    @UploadedFiles() files: { files?: Express.Multer.File[] },
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() createPostDto: CreatePostDto, // 여기서 FormData가 전달될 것으로 기대
   ) {
-    // PostService에 글과 파일 업로드 처리 요청
-    return this.postService.createPost(createPostDto, files?.files);
+    return this.postService.createPost(createPostDto, files);
+  }
+
+  @Get()
+  async getPosts(
+    @Query('page') page: number = 1,
+    @Query('size') size: number = 30,
+  ) {
+    return this.postService.getPosts(page, size);
+  }
+
+  @Get(':id')
+  async getPostDetail(@Param('id') id: string) {
+    return this.postService.getPostDetail(Number(id));
   }
 }

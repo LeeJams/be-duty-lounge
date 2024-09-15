@@ -10,11 +10,12 @@ import { ShiftModule } from './shift/shift.module';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { FileModule } from './file/file.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'), // 파일을 제공할 경로 설정
+      rootPath: join(__dirname, '../../', 'uploads'), // 파일을 제공할 경로 설정
       serveRoot: '/uploads', // 클라이언트가 접근하는 경로
     }),
     CacheModule.register({
@@ -31,6 +32,7 @@ import { FileModule } from './file/file.module';
     ShiftModule,
     ScheduleModule,
     FileModule,
+    PostModule,
   ],
   providers: [
     {
