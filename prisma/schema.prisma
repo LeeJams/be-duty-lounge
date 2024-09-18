@@ -94,6 +94,7 @@ model User {
   posts      Post[] // 유저가 작성한 게시글 (1:N 관계)
   comments   Comment[] // 유저가 작성한 댓글 (1:N 관계)
   savedPosts Post[]     @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
+  likedPosts Post[]     @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
   Shift      Shift[] // 유저가 속한 근무조 (1:N 관계)
   Schedule   Schedule[] // 유저가 가진 스케줄 (1:N 관계)
 
@@ -112,6 +113,7 @@ model Post {
   comments  Comment[] // 댓글 리스트 (1:N 관계)
   files     File[] // 게시글에 첨부된 파일들 (1:N 관계)
   savedBy   User[]    @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
+  likedBy   User[]    @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

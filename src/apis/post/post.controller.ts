@@ -50,8 +50,32 @@ export class PostController {
     return this.postService.getPosts(page, size);
   }
 
+  // 게시글 상세 조회 (조회수 증가, 좋아요/저장 여부 확인)
   @Get(':id')
-  async getPostDetail(@Param('id') id: string) {
-    return this.postService.getPostDetail(Number(id));
+  async getPostDetail(
+    @Param('id') postId: string,
+    @Query('userId') userId: string,
+  ) {
+    return this.postService.getPostDetail(Number(postId), Number(userId));
+  }
+
+  // 좋아요 토글 엔드포인트
+  @Post(':id/like')
+  @HttpCode(HttpStatus.OK)
+  async toggleLikePost(
+    @Param('id') postId: string,
+    @Body('userId') userId: number,
+  ) {
+    return this.postService.toggleLikePost(Number(postId), userId);
+  }
+
+  // 게시글 저장 토글 엔드포인트
+  @Post(':id/save')
+  @HttpCode(HttpStatus.OK)
+  async toggleSavePost(
+    @Param('id') postId: string,
+    @Body('userId') userId: number,
+  ): Promise<boolean> {
+    return this.postService.toggleSavePost(Number(postId), userId);
   }
 }

@@ -11,6 +11,7 @@ import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { FileModule } from './file/file.module';
 import { PostModule } from './post/post.module';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { PostModule } from './post/post.module';
     ScheduleModule,
     FileModule,
     PostModule,
+    CommentModule,
   ],
   providers: [
     {
