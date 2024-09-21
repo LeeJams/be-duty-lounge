@@ -38,37 +38,88 @@ export class PostService {
     return post;
   }
 
-  async getPosts(page: number = 1, size: number = 30) {
+  async getPosts(
+    page: number = 1,
+    size: number = 30,
+    search: string,
+    userId?: string,
+  ) {
     const skip = (page - 1) * size;
+
+    // 기본적으로 title과 content에서 검색어가 포함된 것을 찾기 위한 조건
+    const whereCondition: any = {
+      OR: [{ title: { contains: search } }, { content: { contains: search } }],
+    };
+
+    // userId가 있는 경우, AND 조건으로 userId를 추가
+    if (userId) {
+      whereCondition.AND = { userId: userId };
+    }
+
     const [posts, totalCount] = await Promise.all([
       this.prisma.post.findMany({
         skip,
         take: size,
+        where: whereCondition, // 검색 조건 추가
         orderBy: {
           createdAt: 'desc',
         },
         include: {
           _count: {
             select: {
-              comments: true, // To get the comment count
+              comments: true, // 댓글 수
             },
           },
           user: {
             select: {
-              nickname: true, // To get the user's nickname
+              nickname: true, // 작성자 닉네임
             },
           },
         },
       }),
-      this.prisma.post.count(),
+      this.prisma.post.count({
+        where: whereCondition, // 검색어에 따른 게시물 수 계산
+      }),
     ]);
 
     return {
-      posts: posts.map((post) => ({
-        ...post,
-        commentCount: post._count.comments, // Include the comment count in the response
-      })),
+      posts: posts || [],
       totalPages: Math.ceil(totalCount / size),
+      currentPage: page,
+    };
+  }
+
+  async getSavedPosts(userId: number, page: number = 1, size: number = 100) {
+    const skip = (page - 1) * size;
+
+    // 유저가 저장한 게시글 가져오기
+    const savedPosts = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        savedPosts: {
+          skip,
+          take: size,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: { select: { nickname: true } }, // 게시글 작성자 정보 포함
+            _count: { select: { comments: true } }, // 댓글 수 포함
+          },
+        },
+      },
+    });
+
+    // 유저가 저장한 게시글 전체 수 가져오기
+    const totalSavedPosts = await this.prisma.post.count({
+      where: {
+        savedBy: {
+          some: { id: userId }, // 유저가 저장한 게시글 필터링
+        },
+      },
+    });
+
+    return {
+      posts: savedPosts?.savedPosts || [],
+      totalPages: Math.ceil(totalSavedPosts / size),
       currentPage: page,
     };
   }

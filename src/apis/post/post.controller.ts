@@ -46,8 +46,22 @@ export class PostController {
   async getPosts(
     @Query('page') page: number = 1,
     @Query('size') size: number = 30,
+    @Query('search') search: string,
   ) {
-    return this.postService.getPosts(page, size);
+    return this.postService.getPosts(Number(page), Number(size), search);
+  }
+
+  @Get('saved')
+  async getSavedPosts(
+    @Query('userId') userId: number,
+    @Query('page') page: number,
+    @Query('size') size: number,
+  ) {
+    return this.postService.getSavedPosts(
+      Number(userId),
+      Number(page),
+      Number(size),
+    );
   }
 
   // 게시글 상세 조회 (조회수 증가, 좋아요/저장 여부 확인)
