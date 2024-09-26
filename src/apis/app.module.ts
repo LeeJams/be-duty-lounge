@@ -12,6 +12,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { FileModule } from './file/file.module';
 import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
+import { NoticeModule } from './notice/notice.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { CommentModule } from './comment/comment.module';
     FileModule,
     PostModule,
     CommentModule,
+    NoticeModule,
   ],
   providers: [
     {

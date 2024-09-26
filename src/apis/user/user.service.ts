@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-import { ResponseDto } from 'src/common/dto/response.dto';
 import { GetUserByEmailDto } from './dto/get-user-by-email.dto';
 import { UserDto } from './dto/user.dto';
 import { AuthService } from '../auth/auth.service';
@@ -30,7 +29,7 @@ export class UserService {
       user = existingUser;
     } else {
       // 3. 유저가 존재하지 않으면 새로운 유저 생성
-      const nickname = data.nickname || `user-${uuidv4().slice(0, 8)}`;
+      const nickname = `익명${uuidv4().slice(0, 8)}`;
       user = await this.prisma.user.create({
         data: {
           ...data,
@@ -51,16 +50,12 @@ export class UserService {
     return { user, token };
   }
 
-  async getUserById(id: number): Promise<ResponseDto<User | null>> {
+  async getUserById(id: number): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
 
-    if (!user) {
-      return { success: false, message: 'User not found', data: null };
-    } else {
-      return { success: true, message: 'User found', data: user };
-    }
+    return user;
   }
 
   async getUserByEmail(data: GetUserByEmailDto): Promise<User | null> {
@@ -73,5 +68,29 @@ export class UserService {
 
   async getAllUsers(): Promise<User[]> {
     return this.prisma.user.findMany();
+  }
+
+  async updateUserNickname(userId: number, nickname: string): Promise<boolean> {
+    // 1. 중복 닉네임이 있는지 확인
+    const existingUserWithNickname = await this.prisma.user.findFirst({
+      where: {
+        nickname,
+        NOT: { id: userId }, // 자기 자신은 제외하고 닉네임 중복 체크
+      },
+    });
+
+    // 2. 중복된 닉네임이 있으면 false 반환
+    if (existingUserWithNickname) {
+      return false;
+    }
+
+    // 3. 닉네임이 중복되지 않으면 업데이트 진행
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { nickname },
+    });
+
+    // 4. 업데이트 성공 시 true 반환
+    return true;
   }
 }

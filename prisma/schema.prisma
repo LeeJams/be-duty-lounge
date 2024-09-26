@@ -80,15 +80,16 @@ model Comment {
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  nickname        String    @db.VarChar(255)
-  email           String    @db.VarChar(255)
-  authProvider    String    @db.VarChar(50)
-  authProviderId  String    @db.VarChar(255)
-  profileImageUrl String?   @db.VarChar(255)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @default(now()) @updatedAt
-  deletedAt       DateTime?
+  id             Int       @id @default(autoincrement())
+  nickname       String    @db.VarChar(255)
+  email          String    @db.VarChar(255)
+  authProvider   String    @db.VarChar(50)
+  authProviderId String    @db.VarChar(255)
+  profileEmotion String    @default("emoticon") @db.VarChar(50) // 기본값 설정
+  job            String?   @db.VarChar(50) // nullable로 설정
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  deletedAt      DateTime?
 
   // 관계 정의
   posts      Post[] // 유저가 작성한 게시글 (1:N 관계)
@@ -131,4 +132,12 @@ model File {
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([postId])
+}
+
+model Notice {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(255) // 공지사항 제목
+  content   String   @db.Text // 공지사항 내용
+  createdAt DateTime @default(now()) // 작성일
+  updatedAt DateTime @default(now()) @updatedAt // 수정일
 }
