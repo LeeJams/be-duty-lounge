@@ -72,8 +72,9 @@ model Comment {
   createdAt DateTime @default(now()) // 댓글 작성일
   updatedAt DateTime @default(now()) @updatedAt // 댓글 수정일
 
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post   Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Report Report[]
 
   @@index([postId])
   @@index([userId])
@@ -98,6 +99,7 @@ model User {
   likedPosts Post[]     @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
   Shift      Shift[] // 유저가 속한 근무조 (1:N 관계)
   Schedule   Schedule[] // 유저가 가진 스케줄 (1:N 관계)
+  Report     Report[]
 
   @@unique([email, authProvider])
 }
@@ -111,12 +113,14 @@ model Post {
   likes     Int       @default(0) // 좋아요 수
   createdAt DateTime  @default(now()) // 게시글 작성일
   updatedAt DateTime  @default(now()) @updatedAt // 게시글 수정일
+  deleteYn  Boolean   @default(false) // 삭제 여부
   comments  Comment[] // 댓글 리스트 (1:N 관계)
   files     File[] // 게시글에 첨부된 파일들 (1:N 관계)
   savedBy   User[]    @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
   likedBy   User[]    @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Report Report[]
 
   @@index([userId])
 }
@@ -140,4 +144,21 @@ model Notice {
   content   String   @db.Text // 공지사항 내용
   createdAt DateTime @default(now()) // 작성일
   updatedAt DateTime @default(now()) @updatedAt // 수정일
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  userId    Int // 신고한 사용자 ID
+  postId    Int? // 신고된 게시글 ID (null 가능)
+  commentId Int? // 신고된 댓글 ID (null 가능)
+  reason    String?  @db.VarChar(255) // 신고 사유
+  createdAt DateTime @default(now()) // 신고 작성일
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
 }

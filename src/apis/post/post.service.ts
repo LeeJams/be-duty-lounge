@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { FileService } from '../file/file.service';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostService {
@@ -38,6 +39,80 @@ export class PostService {
     return post;
   }
 
+  async updatePost(
+    postId: number,
+    updatePostDto: UpdatePostDto,
+    files: Express.Multer.File[],
+  ) {
+    // 1. 기존 게시물 가져오기
+    const existingPost = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { files: true }, // 기존 파일 정보도 가져오기
+    });
+
+    if (!existingPost) {
+      throw new Error('Post not found');
+    }
+
+    // 2. 게시물 업데이트 (제목, 내용)
+    const updatedPost = await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        title: updatePostDto.title ?? existingPost.title,
+        content: updatePostDto.content ?? existingPost.content,
+      },
+    });
+
+    // 3. 삭제된 파일 처리
+    const numberOfDeletedFiles =
+      updatePostDto.deletedFileIds?.map(Number) || [];
+    if (numberOfDeletedFiles.length > 0) {
+      // 3-1. 데이터베이스에서 삭제하기 전에 파일 경로를 미리 가져오기
+      const filesToDelete = existingPost.files.filter((file) =>
+        numberOfDeletedFiles.includes(file.id),
+      );
+
+      // 3-2. 데이터베이스에서 파일 정보 삭제
+      await this.prisma.file.deleteMany({
+        where: {
+          id: { in: numberOfDeletedFiles },
+        },
+      });
+
+      // 3-3. 파일 시스템에서 파일 삭제 (deleteFilesByIds 호출 전에 파일 정보 전달)
+      await this.fileService.deleteFilesByPaths(
+        filesToDelete.map((file) => file.url),
+      );
+    }
+
+    // 4. 새로운 파일이 있으면 파일을 저장하고 연결
+    let uploadedFiles = [];
+    if (files && files.length > 0) {
+      uploadedFiles = await this.fileService.saveFiles(files, postId);
+    }
+
+    // 5. 기존 파일과 새 파일 병합 (삭제된 파일 제외)
+    const remainingFiles = existingPost.files.filter(
+      (file) => !numberOfDeletedFiles.includes(file.id),
+    );
+
+    const allFiles = [...remainingFiles, ...uploadedFiles];
+
+    // 6. 게시물과 파일 관계 업데이트 (기존 파일 제거 없이 새 파일 추가)
+    if (allFiles.length > 0) {
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: {
+          files: {
+            connect: allFiles.map((file) => ({ id: file.id })), // 삭제되지 않은 파일과 새로 추가된 파일을 연결
+          },
+        },
+      });
+    }
+
+    return updatedPost;
+  }
+
   async getPosts(
     page: number = 1,
     size: number = 30,
@@ -49,6 +124,7 @@ export class PostService {
     // 기본적으로 title과 content에서 검색어가 포함된 것을 찾기 위한 조건
     const whereCondition: any = {
       OR: [{ title: { contains: search } }, { content: { contains: search } }],
+      deleteYn: false, // 삭제되지 않은 게시글만 가져오기
     };
 
     // userId가 있는 경우, AND 조건으로 userId를 추가
@@ -94,12 +170,15 @@ export class PostService {
 
     // 유저가 저장한 게시글 가져오기
     const savedPosts = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: {
+        id: userId,
+      },
       select: {
         savedPosts: {
           skip,
           take: size,
           orderBy: { createdAt: 'desc' },
+          where: { deleteYn: false }, // 삭제되지 않은 게시글만 가져오기
           include: {
             user: { select: { nickname: true } }, // 게시글 작성자 정보 포함
             _count: { select: { comments: true } }, // 댓글 수 포함
@@ -256,5 +335,15 @@ export class PostService {
 
       return true; // 저장된 경우
     }
+  }
+
+  async deletePost(postId: number) {
+    const post = await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        deleteYn: true,
+      },
+    });
+    return post ? true : false;
   }
 }

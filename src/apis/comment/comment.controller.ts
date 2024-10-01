@@ -41,10 +41,7 @@ export class CommentController {
 
   // 댓글 삭제
   @Delete(':id')
-  async deleteComment(
-    @Param('id') commentId: string,
-    @Body('userId') userId: number,
-  ) {
-    return this.commentService.deleteComment(Number(commentId), userId);
+  async deleteComment(@Param('id') commentId: string) {
+    return this.commentService.deleteComment(Number(commentId));
   }
 }

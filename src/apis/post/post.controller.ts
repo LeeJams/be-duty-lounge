@@ -9,12 +9,15 @@ import {
   Get,
   Query,
   Param,
+  Delete,
+  Put,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Controller('posts')
 export class PostController {
@@ -40,6 +43,29 @@ export class PostController {
     @Body() createPostDto: CreatePostDto, // 여기서 FormData가 전달될 것으로 기대
   ) {
     return this.postService.createPost(createPostDto, files);
+  }
+
+  @Put(':id') // PUT 엔드포인트 정의
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(
+    FilesInterceptor('files', 5, {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+    }),
+  )
+  async updatePost(
+    @Param('id') id: string, // 게시물 ID를 URL 파라미터로 가져옴
+    @UploadedFiles() files: Express.Multer.File[], // 새로운 이미지 파일
+    @Body() updatePostDto: UpdatePostDto, // 업데이트할 데이터
+  ) {
+    return this.postService.updatePost(Number(id), updatePostDto, files);
   }
 
   @Get()
@@ -91,5 +117,10 @@ export class PostController {
     @Body('userId') userId: number,
   ): Promise<boolean> {
     return this.postService.toggleSavePost(Number(postId), userId);
+  }
+
+  @Delete(':id')
+  async deletePost(@Param('id') postId: string) {
+    return this.postService.deletePost(Number(postId));
   }
 }

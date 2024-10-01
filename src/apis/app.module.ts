@@ -13,6 +13,7 @@ import { FileModule } from './file/file.module';
 import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
 import { NoticeModule } from './notice/notice.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { NoticeModule } from './notice/notice.module';
     PostModule,
     CommentModule,
     NoticeModule,
+    ReportModule,
   ],
   providers: [
     {

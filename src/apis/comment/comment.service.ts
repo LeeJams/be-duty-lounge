@@ -58,17 +58,14 @@ export class CommentService {
   }
 
   // 댓글 삭제
-  async deleteComment(commentId: number, userId: number) {
-    const existingComment = await this.prisma.comment.findUnique({
+  async deleteComment(commentId: number) {
+    const comment = await this.prisma.comment.delete({
       where: { id: commentId },
     });
 
-    if (!existingComment || existingComment.userId !== userId) {
-      throw new NotFoundException('Comment not found or unauthorized');
+    if (!comment) {
+      return false;
     }
-
-    return this.prisma.comment.delete({
-      where: { id: commentId },
-    });
+    return true;
   }
 }
