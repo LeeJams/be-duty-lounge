@@ -149,6 +149,7 @@ export class PostService {
           user: {
             select: {
               nickname: true, // 작성자 닉네임
+              company: true, // 작성자 회사 정보
             },
           },
         },

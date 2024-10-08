@@ -87,10 +87,11 @@ model User {
   authProvider   String    @db.VarChar(50)
   authProviderId String    @db.VarChar(255)
   profileEmotion String    @default("emoticon") @db.VarChar(50) // 기본값 설정
-  job            String?   @db.VarChar(50) // nullable로 설정
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
   deletedAt      DateTime?
+  code           String    @unique @db.VarChar(6)
+  company        String?   @db.VarChar(255) // nullable로 설정
 
   // 관계 정의
   posts      Post[] // 유저가 작성한 게시글 (1:N 관계)
@@ -102,6 +103,7 @@ model User {
   Report     Report[]
 
   @@unique([email, authProvider])
+  @@index([code])
 }
 
 model Post {

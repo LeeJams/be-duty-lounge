@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Get, Query, Param, Put } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Query,
+  Param,
+  Put,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
 import { GetUserByEmailDto } from './dto/get-user-by-email.dto';
@@ -32,5 +42,23 @@ export class UserController {
     @Body('nickname') nickname: string,
   ) {
     return this.userService.updateUserNickname(Number(id), nickname);
+  }
+
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    return this.userService.deleteUser(Number(id));
+  }
+
+  @Patch('/auth/:id')
+  async updateCompany(
+    @Param('id') id: string,
+    @Body() body: { code: string; company: string },
+  ) {
+    const { code, company } = body;
+    return this.userService.authenticateAndUpdateCompany(
+      Number(id),
+      code,
+      company,
+    );
   }
 }
