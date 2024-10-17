@@ -27,7 +27,13 @@ export class ShiftController {
   @Post(':userId')
   async createShift(
     @Param('userId') userId: string,
-    @Body() shiftData: { name: string; color: string },
+    @Body()
+    shiftData: {
+      name: string;
+      color: string;
+      startTime?: string;
+      endTime?: string;
+    },
   ): Promise<Shift> {
     return this.shiftService.createShift(parseInt(userId, 10), shiftData);
   }
@@ -35,7 +41,13 @@ export class ShiftController {
   @Put(':id')
   async updateShift(
     @Param('id') id: string,
-    @Body() shiftData: { name?: string; color?: string },
+    @Body()
+    shiftData: {
+      name?: string;
+      color?: string;
+      startTime?: string;
+      endTime?: string;
+    },
   ): Promise<Shift> {
     return this.shiftService.updateShift(parseInt(id, 10), shiftData);
   }

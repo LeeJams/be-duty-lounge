@@ -12,6 +12,9 @@ model Shift {
   userId    Int
   name      String   @db.VarChar(255) // 근무조 이름
   color     String   @db.VarChar(50) // 근무조 색상
+  startTime String?  @db.VarChar(5) // 근무 시작 시간 (nullable, null이면 오프)
+  endTime   String?  @db.VarChar(5) // 근무 종료 시간 (nullable, null이면 오프)
+  off       Boolean  @default(false) // 오프 여부
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
