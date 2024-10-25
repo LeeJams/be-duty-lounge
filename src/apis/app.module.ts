@@ -14,6 +14,7 @@ import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
 import { NoticeModule } from './notice/notice.module';
 import { ReportModule } from './report/report.module';
+import { GroupModule } from './group/group.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ReportModule } from './report/report.module';
     CommentModule,
     NoticeModule,
     ReportModule,
+    GroupModule,
   ],
   providers: [
     {

@@ -8,7 +8,7 @@ import {
   Get,
 } from '@nestjs/common';
 import { ShiftService } from './shift.service';
-import { Shift } from '@prisma/client';
+import { Prisma, Shift } from '@prisma/client';
 
 @Controller('shift')
 export class ShiftController {
@@ -33,6 +33,7 @@ export class ShiftController {
       color: string;
       startTime?: string;
       endTime?: string;
+      off?: boolean;
     },
   ): Promise<Shift> {
     return this.shiftService.createShift(parseInt(userId, 10), shiftData);
@@ -42,12 +43,7 @@ export class ShiftController {
   async updateShift(
     @Param('id') id: string,
     @Body()
-    shiftData: {
-      name?: string;
-      color?: string;
-      startTime?: string;
-      endTime?: string;
-    },
+    shiftData: Prisma.ShiftUpdateInput,
   ): Promise<Shift> {
     return this.shiftService.updateShift(parseInt(id, 10), shiftData);
   }

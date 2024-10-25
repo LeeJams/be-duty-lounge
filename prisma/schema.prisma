@@ -99,11 +99,12 @@ model User {
   // 관계 정의
   posts      Post[] // 유저가 작성한 게시글 (1:N 관계)
   comments   Comment[] // 유저가 작성한 댓글 (1:N 관계)
-  savedPosts Post[]     @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
-  likedPosts Post[]     @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
+  savedPosts Post[]      @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
+  likedPosts Post[]      @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
   Shift      Shift[] // 유저가 속한 근무조 (1:N 관계)
   Schedule   Schedule[] // 유저가 가진 스케줄 (1:N 관계)
   Report     Report[]
+  GroupUser  GroupUser[]
 
   @@unique([email, authProvider])
   @@index([code])
@@ -166,4 +167,31 @@ model Report {
   @@index([userId])
   @@index([postId])
   @@index([commentId])
+}
+
+model Group {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(255) // 그룹 이름
+  description String?     @db.Text // 그룹 설명 (nullable)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
+  users       GroupUser[] // 그룹에 속한 유저들
+
+  @@index([name])
+}
+
+model GroupUser {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  userId    Int
+  userName  String?  @db.VarChar(255) // 그룹 내에서의 유저 이름 (nullable)
+  isOwner   Boolean  @default(false) // 그룹 소유자 여부
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId]) // 동일한 그룹에서 중복된 유저 방지
+  @@index([groupId])
+  @@index([userId])
 }

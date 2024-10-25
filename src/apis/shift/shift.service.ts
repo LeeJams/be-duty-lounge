@@ -8,10 +8,10 @@ export class ShiftService {
 
   async createDefaultShiftsForUser(userId: number): Promise<Shift[]> {
     const defaultShifts = [
-      { name: '모닝', color: 'orange' },
-      { name: '데이', color: 'cyan' },
-      { name: '나이트', color: 'blue' },
-      { name: '오프', color: 'pink' },
+      { name: '모닝', color: 'orange', off: false },
+      { name: '데이', color: 'cyan', off: false },
+      { name: '나이트', color: 'blue', off: false },
+      { name: '오프', color: 'pink', off: true },
     ];
 
     const shifts = [];
@@ -36,6 +36,7 @@ export class ShiftService {
       color: string;
       startTime?: string;
       endTime?: string;
+      off?: boolean;
     },
   ): Promise<Shift> {
     return this.prisma.shift.create({
