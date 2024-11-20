@@ -88,7 +88,7 @@ model User {
   nickname       String    @db.VarChar(255)
   email          String    @db.VarChar(255)
   authProvider   String    @db.VarChar(50)
-  authProviderId String    @db.VarChar(255)
+  authProviderId String    @db.Text // OAuth 인증 공급자에서 제공하는 ID
   profileEmotion String    @default("emoticon") @db.VarChar(50) // 기본값 설정
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
@@ -187,6 +187,7 @@ model GroupUser {
   userName  String?  @db.VarChar(255) // 그룹 내에서의 유저 이름 (nullable)
   isOwner   Boolean  @default(false) // 그룹 소유자 여부
   createdAt DateTime @default(now())
+  isJoined  Boolean  @default(false) // 그룹 가입 여부
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)

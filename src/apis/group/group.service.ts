@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // PrismaService 사용
 import { CreateGroupDto } from './dto/create-group.dto'; // 그룹 생성 DTO
+import { InviteUserDto } from './dto/invite-user.dto';
+import { RespondInviteDto } from './dto/respond-invite.dto';
 
 @Injectable()
 export class GroupService {
@@ -18,6 +20,7 @@ export class GroupService {
           create: {
             userId,
             isOwner: true, // 그룹 소유자 설정
+            isJoined: true, // 그룹 가입 여부 설정
           },
         },
       },
@@ -31,7 +34,7 @@ export class GroupService {
 
   // 사용자가 속한 그룹 리스트 조회 (유저 수 및 소유자 여부 포함)
   async getGroupsByUserId(userId: number) {
-    return await this.prisma.group.findMany({
+    const groups = await this.prisma.group.findMany({
       where: {
         users: {
           some: {
@@ -46,16 +49,27 @@ export class GroupService {
         createdAt: true,
         updatedAt: true,
         _count: {
-          select: { users: true }, // 유저 수 계산
+          select: { users: true },
         },
         users: {
-          where: { userId: userId }, // 현재 조회하는 유저의 소유 여부 확인
+          where: { userId: userId },
           select: {
-            isOwner: true, // 소유자인지 여부 반환
+            isOwner: true,
+            isJoined: true,
+            id: true,
           },
         },
       },
     });
+
+    // users 필드에서 isOwner, isJoined를 최상위로 추출하고 users 필드를 제거
+    return groups.map((group) => ({
+      ...group,
+      isOwner: group.users[0]?.isOwner || false,
+      isJoined: group.users[0]?.isJoined || false,
+      users: undefined, // users 필드를 제거
+      inviteId: group.users[0]?.id, // 초대 ID
+    }));
   }
 
   // 그룹 상세 조회 - 그룹 기본 정보와 인원 리스트 조회
@@ -109,6 +123,7 @@ export class GroupService {
       select: {
         id: true,
         users: {
+          where: { isJoined: true }, // 가입한 유저만 조회
           select: {
             userName: true,
             user: {
@@ -172,5 +187,51 @@ export class GroupService {
       id: group.id,
       users: usersWithSchedules,
     };
+  }
+
+  // 그룹에 사용자를 초대하는 메서드
+  async inviteUserToGroup(groupId: number, inviteUserDto: InviteUserDto) {
+    // 사용자 코드로 사용자를 조회합니다.
+    const user = await this.prisma.user.findUnique({
+      where: { code: inviteUserDto.userCode },
+    });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // GroupUser에 초대 정보를 추가합니다.
+    const groupUser = await this.prisma.groupUser.create({
+      data: {
+        groupId: groupId,
+        userId: user.id,
+        isJoined: false,
+      },
+    });
+    return groupUser;
+  }
+
+  // 초대에 대한 응답을 처리하는 메서드
+  async respondToInvite(inviteId: number, respondInviteDto: RespondInviteDto) {
+    const invite = await this.prisma.groupUser.findUnique({
+      where: { id: inviteId },
+    });
+    if (!invite) {
+      throw new Error('Invite not found');
+    }
+
+    if (respondInviteDto.accept) {
+      // 초대를 수락한 경우 isJoined를 true로 변경합니다.
+      await this.prisma.groupUser.update({
+        where: { id: inviteId },
+        data: { isJoined: true },
+      });
+    } else {
+      // 초대를 거절한 경우 초대 정보를 삭제합니다.
+      await this.prisma.groupUser.delete({
+        where: { id: inviteId },
+      });
+    }
+
+    return true;
   }
 }

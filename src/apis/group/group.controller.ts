@@ -1,6 +1,16 @@
-import { Controller, Post, Body, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { InviteUserDto } from './dto/invite-user.dto';
+import { RespondInviteDto } from './dto/respond-invite.dto';
 
 @Controller('groups')
 export class GroupController {
@@ -37,5 +47,31 @@ export class GroupController {
       Number(year),
       Number(month),
     );
+  }
+
+  // 그룹에 대한 초대 API
+  @Post(':groupId/invite')
+  async inviteUserToGroup(
+    @Param('groupId') groupId: string,
+    @Body() inviteUserDto: InviteUserDto,
+  ) {
+    const invitedUser = await this.groupService.inviteUserToGroup(
+      Number(groupId),
+      inviteUserDto,
+    );
+    return invitedUser;
+  }
+
+  // 초대받은 사용자가 초대를 수락 또는 거절하는 API
+  @Patch('invite/:inviteId')
+  async respondToInvite(
+    @Param('inviteId') inviteId: string,
+    @Body() respondInviteDto: RespondInviteDto,
+  ) {
+    const response = await this.groupService.respondToInvite(
+      Number(inviteId),
+      respondInviteDto,
+    );
+    return response;
   }
 }
