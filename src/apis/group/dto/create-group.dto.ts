@@ -1,5 +1,5 @@
 export class CreateGroupDto {
-  name: string;
+  groupName: string;
   userId: number;
-  description?: string;
+  nickName: string;
 }

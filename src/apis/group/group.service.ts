@@ -9,18 +9,18 @@ export class GroupService {
   constructor(private prisma: PrismaService) {}
 
   async createGroup(createGroupDto: CreateGroupDto) {
-    const { name, description, userId } = createGroupDto;
+    const { groupName, nickName, userId } = createGroupDto;
 
     // 그룹 생성 및 그룹 소유자 추가
     const group = await this.prisma.group.create({
       data: {
-        name,
-        description,
+        name: groupName,
         users: {
           create: {
             userId,
             isOwner: true, // 그룹 소유자 설정
             isJoined: true, // 그룹 가입 여부 설정
+            userName: nickName, // 사용자 이름 설정
           },
         },
       },
@@ -81,6 +81,7 @@ export class GroupService {
         name: true,
         description: true,
         users: {
+          where: { isJoined: true }, // 가입한 유저만 조회
           select: {
             userName: true, // 사용자 이름 필드
             user: {
@@ -89,7 +90,9 @@ export class GroupService {
                 nickname: true,
               },
             },
+            id: true, // GroupUser ID
             isOwner: true, // 그룹 소유자 여부
+            userId: true, // 사용자 ID
           },
         },
       },
@@ -102,7 +105,8 @@ export class GroupService {
     // 필요한 형태로 데이터 가공
     const users = group.users.map((user) => ({
       userName: user.userName,
-      id: user.user.id,
+      id: user.id,
+      userId: user.userId,
       nickname: user.user.nickname,
       isOwner: user.isOwner,
     }));
@@ -112,6 +116,7 @@ export class GroupService {
       name: group.name,
       description: group.description,
       users: users,
+      ownerId: users.find((user) => user.isOwner)?.userId,
     };
   }
 
@@ -231,6 +236,33 @@ export class GroupService {
         where: { id: inviteId },
       });
     }
+
+    return true;
+  }
+
+  // 그룹에서 사용자를 강퇴하는 메서드
+  async removeUserFromGroup(groupId: number, inviteId: number) {
+    // GroupUser에서 사용자 정보를 삭제합니다.
+    await this.prisma.groupUser.deleteMany({
+      where: {
+        groupId: groupId,
+        id: inviteId,
+      },
+    });
+    return true;
+  }
+
+  // 그룹을 삭제하는 메서드
+  async deleteGroup(groupId: number) {
+    // GroupUser에서 그룹에 속한 사용자 정보를 삭제합니다.
+    await this.prisma.groupUser.deleteMany({
+      where: { groupId: groupId },
+    });
+
+    // Group을 삭제합니다.
+    await this.prisma.group.delete({
+      where: { id: groupId },
+    });
 
     return true;
   }

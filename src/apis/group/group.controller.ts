@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -16,6 +17,7 @@ import { RespondInviteDto } from './dto/respond-invite.dto';
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
+  // 그룹 생성 API
   @Post()
   async createGroup(@Body() createGroupDto: CreateGroupDto) {
     const group = await this.groupService.createGroup(createGroupDto);
@@ -73,5 +75,25 @@ export class GroupController {
       respondInviteDto,
     );
     return response;
+  }
+
+  // 그룹에서 사용자를 강퇴하는 API
+  @Delete(':groupId/users/:inviteId')
+  async removeUserFromGroup(
+    @Param('groupId') groupId: string,
+    @Param('inviteId') inviteId: string,
+  ) {
+    const result = await this.groupService.removeUserFromGroup(
+      Number(groupId),
+      Number(inviteId),
+    );
+    return result;
+  }
+
+  // 그룹을 삭제하는 API
+  @Delete(':groupId')
+  async deleteGroup(@Param('groupId') groupId: string) {
+    const result = await this.groupService.deleteGroup(Number(groupId));
+    return result;
   }
 }
