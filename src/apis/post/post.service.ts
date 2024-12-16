@@ -11,13 +11,17 @@ export class PostService {
     private fileService: FileService,
   ) {}
 
-  async createPost(createPostDto: CreatePostDto, files: Express.Multer.File[]) {
+  async createPost(
+    createPostDto: CreatePostDto,
+    files: Express.Multer.File[],
+    userId: number,
+  ) {
     // 1. 게시글을 먼저 생성하여 postId를 얻음
     const post = await this.prisma.post.create({
       data: {
         title: createPostDto.title,
         content: createPostDto.content,
-        userId: Number(createPostDto.userId),
+        userId: userId,
       },
     });
 
@@ -43,10 +47,11 @@ export class PostService {
     postId: number,
     updatePostDto: UpdatePostDto,
     files: Express.Multer.File[],
+    userId: number,
   ) {
     // 1. 기존 게시물 가져오기
     const existingPost = await this.prisma.post.findUnique({
-      where: { id: postId },
+      where: { id: postId, userId },
       include: { files: true }, // 기존 파일 정보도 가져오기
     });
 
@@ -338,9 +343,9 @@ export class PostService {
     }
   }
 
-  async deletePost(postId: number) {
+  async deletePost(postId: number, userId: number) {
     const post = await this.prisma.post.update({
-      where: { id: postId },
+      where: { id: postId, userId },
       data: {
         deleteYn: true,
       },

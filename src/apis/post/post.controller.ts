@@ -11,6 +11,7 @@ import {
   Param,
   Delete,
   Put,
+  Request,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -18,12 +19,14 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { Auth } from 'src/common/decoration/auth';
 
 @Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
+  @Auth()
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
     FilesInterceptor('files', 5, {
@@ -40,12 +43,15 @@ export class PostController {
   )
   async createPost(
     @UploadedFiles() files: Express.Multer.File[],
-    @Body() createPostDto: CreatePostDto, // 여기서 FormData가 전달될 것으로 기대
+    @Body() createPostDto: CreatePostDto,
+    @Request() req,
   ) {
-    return this.postService.createPost(createPostDto, files);
+    const userId = req.user.userId;
+    return this.postService.createPost(createPostDto, files, userId);
   }
 
-  @Put(':id') // PUT 엔드포인트 정의
+  @Put(':postId')
+  @Auth()
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FilesInterceptor('files', 5, {
@@ -61,11 +67,18 @@ export class PostController {
     }),
   )
   async updatePost(
-    @Param('id') id: string, // 게시물 ID를 URL 파라미터로 가져옴
-    @UploadedFiles() files: Express.Multer.File[], // 새로운 이미지 파일
-    @Body() updatePostDto: UpdatePostDto, // 업데이트할 데이터
+    @Param('postId') postId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() updatePostDto: UpdatePostDto,
+    @Request() req,
   ) {
-    return this.postService.updatePost(Number(id), updatePostDto, files);
+    const userId = req.user.userId;
+    return this.postService.updatePost(
+      Number(postId),
+      updatePostDto,
+      files,
+      userId,
+    );
   }
 
   @Get()
@@ -78,49 +91,46 @@ export class PostController {
   }
 
   @Get('saved')
+  @Auth()
   async getSavedPosts(
-    @Query('userId') userId: number,
-    @Query('page') page: number,
-    @Query('size') size: number,
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('size') size: number = 30,
   ) {
-    return this.postService.getSavedPosts(
-      Number(userId),
-      Number(page),
-      Number(size),
-    );
+    const userId = req.user.userId;
+    return this.postService.getSavedPosts(userId, Number(page), Number(size));
   }
 
-  // 게시글 상세 조회 (조회수 증가, 좋아요/저장 여부 확인)
-  @Get(':id')
-  async getPostDetail(
-    @Param('id') postId: string,
-    @Query('userId') userId: string,
-  ) {
-    return this.postService.getPostDetail(Number(postId), Number(userId));
+  @Get(':postId')
+  @Auth()
+  async getPostDetail(@Param('postId') postId: string, @Request() req) {
+    const userId = req.user.userId;
+    return this.postService.getPostDetail(Number(postId), userId);
   }
 
-  // 좋아요 토글 엔드포인트
-  @Post(':id/like')
+  @Post(':postId/like')
+  @Auth()
   @HttpCode(HttpStatus.OK)
-  async toggleLikePost(
-    @Param('id') postId: string,
-    @Body('userId') userId: number,
-  ) {
+  async toggleLikePost(@Param('postId') postId: string, @Request() req) {
+    const userId = req.user.userId;
     return this.postService.toggleLikePost(Number(postId), userId);
   }
 
-  // 게시글 저장 토글 엔드포인트
-  @Post(':id/save')
+  @Post(':postId/save')
+  @Auth()
   @HttpCode(HttpStatus.OK)
   async toggleSavePost(
-    @Param('id') postId: string,
-    @Body('userId') userId: number,
+    @Param('postId') postId: string,
+    @Request() req,
   ): Promise<boolean> {
+    const userId = req.user.userId;
     return this.postService.toggleSavePost(Number(postId), userId);
   }
 
-  @Delete(':id')
-  async deletePost(@Param('id') postId: string) {
-    return this.postService.deletePost(Number(postId));
+  @Delete(':postId')
+  @Auth()
+  async deletePost(@Param('postId') postId: string, @Request() req) {
+    const userId = req.user.userId;
+    return this.postService.deletePost(Number(postId), userId);
   }
 }

@@ -8,8 +8,8 @@ export class CommentService {
   constructor(private prisma: PrismaService) {}
 
   // 댓글 작성
-  async createComment(createCommentDto: CreateCommentDto) {
-    const { postId, content, userId } = createCommentDto;
+  async createComment(userId: number, createCommentDto: CreateCommentDto) {
+    const { postId, content } = createCommentDto;
 
     // 댓글 작성
     return this.prisma.comment.create({
@@ -39,8 +39,12 @@ export class CommentService {
   }
 
   // 댓글 수정
-  async updateComment(commentId: number, updateCommentDto: UpdateCommentDto) {
-    const { userId, content } = updateCommentDto;
+  async updateComment(
+    userId: number,
+    commentId: number,
+    updateCommentDto: UpdateCommentDto,
+  ) {
+    const { content } = updateCommentDto;
     const existingComment = await this.prisma.comment.findUnique({
       where: { id: commentId },
     });
@@ -58,9 +62,9 @@ export class CommentService {
   }
 
   // 댓글 삭제
-  async deleteComment(commentId: number) {
+  async deleteComment(userId: number, commentId: number) {
     const comment = await this.prisma.comment.delete({
-      where: { id: commentId },
+      where: { id: commentId, userId },
     });
 
     if (!comment) {

@@ -8,8 +8,8 @@ import { RespondInviteDto } from './dto/respond-invite.dto';
 export class GroupService {
   constructor(private prisma: PrismaService) {}
 
-  async createGroup(createGroupDto: CreateGroupDto) {
-    const { groupName, nickName, userId } = createGroupDto;
+  async createGroup(userId: number, createGroupDto: CreateGroupDto) {
+    const { groupName, nickName } = createGroupDto;
 
     // 그룹 생성 및 그룹 소유자 추가
     const group = await this.prisma.group.create({

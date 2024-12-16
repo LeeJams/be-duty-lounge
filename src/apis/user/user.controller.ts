@@ -3,16 +3,15 @@ import {
   Post,
   Body,
   Get,
-  Query,
-  Param,
   Put,
   Delete,
   Patch,
+  Request,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
-import { GetUserByEmailDto } from './dto/get-user-by-email.dto';
 import { UserDto } from './dto/user.dto';
+import { Auth } from 'src/common/decoration/auth';
 
 @Controller('user')
 export class UserController {
@@ -25,40 +24,34 @@ export class UserController {
   }
 
   @Get()
-  async getUserByEmail(
-    @Query() query: GetUserByEmailDto,
-  ): Promise<User | null> {
-    return this.userService.getUserByEmail(query);
+  @Auth()
+  async getUserById(@Request() req): Promise<User | null> {
+    const userId = req.user.userId; // 토큰에서 추출된 userId 사용
+    return this.userService.getUserById(userId);
   }
 
-  @Get(':id')
-  async getUserById(@Param('id') id: string): Promise<User | null> {
-    return this.userService.getUserById(Number(id));
+  @Put()
+  @Auth()
+  async updateUserNickname(@Request() req, @Body('nickname') nickname: string) {
+    const userId = req.user.userId; // 토큰에서 추출된 userId 사용
+    return this.userService.updateUserNickname(userId, nickname);
   }
 
-  @Put(':id')
-  async updateUserNickname(
-    @Param('id') id: string,
-    @Body('nickname') nickname: string,
-  ) {
-    return this.userService.updateUserNickname(Number(id), nickname);
+  @Delete()
+  @Auth()
+  async deleteUser(@Request() req) {
+    const userId = req.user.userId; // 토큰에서 추출된 userId 사용
+    return this.userService.deleteUser(userId);
   }
 
-  @Delete(':id')
-  async deleteUser(@Param('id') id: string) {
-    return this.userService.deleteUser(Number(id));
-  }
-
-  @Patch('/auth/:id')
+  @Patch('/company')
+  @Auth()
   async updateCompany(
-    @Param('id') id: string,
+    @Request() req,
     @Body() body: { code: string; company: string },
   ) {
+    const userId = req.user.userId; // 토큰에서 추출된 userId 사용
     const { code, company } = body;
-    return this.userService.authenticateAndUpdateCompany(
-      Number(id),
-      code,
-      company,
-    );
+    return this.userService.authenticateAndUpdateCompany(userId, code, company);
   }
 }

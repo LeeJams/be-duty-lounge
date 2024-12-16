@@ -6,10 +6,12 @@ import {
   Delete,
   Put,
   Get,
+  Request,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Auth } from 'src/common/decoration/auth';
 
 @Controller('comments')
 export class CommentController {
@@ -17,8 +19,13 @@ export class CommentController {
 
   // 댓글 작성
   @Post()
-  async createComment(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentService.createComment(createCommentDto);
+  @Auth()
+  async createComment(
+    @Request() req,
+    @Body() createCommentDto: CreateCommentDto,
+  ) {
+    const userId = req.user.userId; // JWT에서 추출된 userId 사용
+    return this.commentService.createComment(userId, createCommentDto);
   }
 
   // 특정 게시글의 댓글 조회
@@ -28,20 +35,26 @@ export class CommentController {
   }
 
   // 댓글 수정
-  @Put(':id')
+  @Put(':commentId')
+  @Auth()
   async updateComment(
-    @Param('id') commentId: string,
+    @Request() req,
+    @Param('commentId') commentId: string,
     @Body() updateCommentDto: UpdateCommentDto,
   ) {
+    const userId = req.user.userId; // JWT에서 추출된 userId 사용
     return this.commentService.updateComment(
+      userId,
       Number(commentId),
       updateCommentDto,
     );
   }
 
   // 댓글 삭제
-  @Delete(':id')
-  async deleteComment(@Param('id') commentId: string) {
-    return this.commentService.deleteComment(Number(commentId));
+  @Delete(':commentId')
+  @Auth()
+  async deleteComment(@Request() req, @Param('commentId') commentId: string) {
+    const userId = req.user.userId; // JWT에서 추출된 userId 사용
+    return this.commentService.deleteComment(userId, Number(commentId));
   }
 }

@@ -1,29 +1,50 @@
-import { Controller, Post, Param, Body, Get, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Delete,
+  Request,
+  Param,
+} from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
+import { Auth } from 'src/common/decoration/auth';
+import { ApiOperation } from '@nestjs/swagger';
 import { Schedule } from '@prisma/client';
 
 @Controller('schedule')
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
-  @Post(':userId/:month/:year')
+  @Post(':month/:year')
+  @Auth()
+  @ApiOperation({
+    summary: '스케줄 생성 또는 업데이트',
+    description: '월별 스케줄을 생성하거나 업데이트합니다.',
+  })
   async createOrUpdateSchedule(
-    @Param('userId') userId: string,
+    @Request() req,
     @Param('month') month: string,
     @Param('year') year: string,
     @Body() scheduleData: Partial<Record<number, number>>, // { 1: shiftId, 2: shiftId, ... }
   ): Promise<Schedule> {
+    const userId = req.user.userId; // JWT에서 추출한 userId
     return this.scheduleService.createOrUpdateSchedule(
-      parseInt(userId, 10),
+      userId,
       parseInt(month, 10),
       parseInt(year, 10),
       scheduleData,
     );
   }
 
-  @Get(':userId/:month/:year')
+  @Get(':month/:year')
+  @Auth()
+  @ApiOperation({
+    summary: '스케줄 조회',
+    description: '월별 스케줄을 조회합니다.',
+  })
   async getSchedule(
-    @Param('userId') userId: string,
+    @Request() req,
     @Param('month') month: string,
     @Param('year') year: string,
   ): Promise<{
@@ -33,21 +54,28 @@ export class ScheduleController {
     year: number;
     days: { id: number; color: string; name: string }[];
   } | null> {
+    const userId = req.user.userId; // JWT에서 추출한 userId
     return this.scheduleService.getSchedule(
-      parseInt(userId, 10),
+      userId,
       parseInt(month, 10),
       parseInt(year, 10),
     );
   }
 
-  @Delete(':userId/:month/:year')
+  @Delete(':month/:year')
+  @Auth()
+  @ApiOperation({
+    summary: '스케줄 삭제',
+    description: '월별 스케줄을 삭제합니다.',
+  })
   async deleteSchedule(
-    @Param('userId') userId: string,
+    @Request() req,
     @Param('month') month: string,
     @Param('year') year: string,
   ): Promise<void> {
+    const userId = req.user.userId; // JWT에서 추출한 userId
     await this.scheduleService.deleteSchedule(
-      parseInt(userId, 10),
+      userId,
       parseInt(month, 10),
       parseInt(year, 10),
     );

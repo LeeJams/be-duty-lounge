@@ -1,32 +1,39 @@
 import {
   Controller,
   Post,
-  Param,
   Body,
   Put,
   Delete,
   Get,
+  Request,
+  Param,
 } from '@nestjs/common';
 import { ShiftService } from './shift.service';
 import { Prisma, Shift } from '@prisma/client';
+import { Auth } from 'src/common/decoration/auth';
 
 @Controller('shift')
 export class ShiftController {
   constructor(private readonly shiftService: ShiftService) {}
 
-  @Post(':userId/default')
-  async createDefaultShifts(@Param('userId') userId: string): Promise<Shift[]> {
-    return this.shiftService.createDefaultShiftsForUser(parseInt(userId, 10));
+  @Post('default')
+  @Auth()
+  async createDefaultShifts(@Request() req): Promise<Shift[]> {
+    const userId = req.user.userId; // JWT에서 추출한 userId 사용
+    return this.shiftService.createDefaultShiftsForUser(userId);
   }
 
-  @Get(':userId')
-  async getShifts(@Param('userId') userId: string): Promise<Shift[]> {
-    return this.shiftService.getShiftsByUserId(parseInt(userId, 10));
+  @Get()
+  @Auth()
+  async getShifts(@Request() req): Promise<Shift[]> {
+    const userId = req.user.userId; // JWT에서 추출한 userId 사용
+    return this.shiftService.getShiftsByUserId(userId);
   }
 
-  @Post(':userId')
+  @Post()
+  @Auth()
   async createShift(
-    @Param('userId') userId: string,
+    @Request() req,
     @Body()
     shiftData: {
       name: string;
@@ -36,20 +43,22 @@ export class ShiftController {
       off?: boolean;
     },
   ): Promise<Shift> {
-    return this.shiftService.createShift(parseInt(userId, 10), shiftData);
+    const userId = req.user.userId; // JWT에서 추출한 userId 사용
+    return this.shiftService.createShift(userId, shiftData);
   }
 
-  @Put(':id')
+  @Put(':shiftId')
+  @Auth()
   async updateShift(
-    @Param('id') id: string,
-    @Body()
-    shiftData: Prisma.ShiftUpdateInput,
+    @Param('shiftId') shiftId: string,
+    @Body() shiftData: Prisma.ShiftUpdateInput,
   ): Promise<Shift> {
-    return this.shiftService.updateShift(parseInt(id, 10), shiftData);
+    return this.shiftService.updateShift(parseInt(shiftId, 10), shiftData);
   }
 
-  @Delete(':id')
-  async deleteShift(@Param('id') id: string): Promise<Shift> {
-    return this.shiftService.deleteShift(parseInt(id, 10));
+  @Delete(':shiftId')
+  @Auth()
+  async deleteShift(@Param('shiftId') shiftId: string): Promise<Shift> {
+    return this.shiftService.deleteShift(parseInt(shiftId, 10));
   }
 }

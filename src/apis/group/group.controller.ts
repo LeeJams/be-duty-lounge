@@ -7,11 +7,13 @@ import {
   Query,
   Patch,
   Delete,
+  Request,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { RespondInviteDto } from './dto/respond-invite.dto';
+import { Auth } from 'src/common/decoration/auth';
 
 @Controller('groups')
 export class GroupController {
@@ -19,26 +21,30 @@ export class GroupController {
 
   // 그룹 생성 API
   @Post()
-  async createGroup(@Body() createGroupDto: CreateGroupDto) {
-    const group = await this.groupService.createGroup(createGroupDto);
-    return group;
+  @Auth()
+  async createGroup(@Request() req, @Body() createGroupDto: CreateGroupDto) {
+    const userId = req.user.userId; // JWT에서 추출한 userId 사용
+    return this.groupService.createGroup(userId, createGroupDto);
   }
 
   // 사용자의 그룹 리스트 조회
-  @Get(':userId')
-  async getUserGroups(@Param('userId') userId: string) {
-    const groups = await this.groupService.getGroupsByUserId(Number(userId));
-    return groups;
+  @Get()
+  @Auth()
+  async getUserGroups(@Request() req) {
+    const userId = req.user.userId; // JWT에서 추출한 userId 사용
+    return this.groupService.getGroupsByUserId(userId);
   }
 
   // 특정 그룹의 디테일 정보 조회
   @Get(':groupId/details')
+  @Auth()
   async getGroupDetail(@Param('groupId') groupId: string) {
     return this.groupService.getGroupDetail(Number(groupId));
   }
 
   // 그룹에 속한 인원의 스케줄 조회
   @Get(':groupId/schedules')
+  @Auth()
   async getGroupSchedules(
     @Param('groupId') groupId: string,
     @Query('year') year: string,
@@ -53,47 +59,44 @@ export class GroupController {
 
   // 그룹에 대한 초대 API
   @Post(':groupId/invite')
+  @Auth()
   async inviteUserToGroup(
     @Param('groupId') groupId: string,
     @Body() inviteUserDto: InviteUserDto,
   ) {
-    const invitedUser = await this.groupService.inviteUserToGroup(
-      Number(groupId),
-      inviteUserDto,
-    );
-    return invitedUser;
+    return this.groupService.inviteUserToGroup(Number(groupId), inviteUserDto);
   }
 
   // 초대받은 사용자가 초대를 수락 또는 거절하는 API
   @Patch('invite/:inviteId')
+  @Auth()
   async respondToInvite(
     @Param('inviteId') inviteId: string,
     @Body() respondInviteDto: RespondInviteDto,
   ) {
-    const response = await this.groupService.respondToInvite(
+    return this.groupService.respondToInvite(
       Number(inviteId),
       respondInviteDto,
     );
-    return response;
   }
 
   // 그룹에서 사용자를 강퇴하는 API
   @Delete(':groupId/users/:inviteId')
+  @Auth()
   async removeUserFromGroup(
     @Param('groupId') groupId: string,
     @Param('inviteId') inviteId: string,
   ) {
-    const result = await this.groupService.removeUserFromGroup(
+    return this.groupService.removeUserFromGroup(
       Number(groupId),
       Number(inviteId),
     );
-    return result;
   }
 
   // 그룹을 삭제하는 API
   @Delete(':groupId')
+  @Auth()
   async deleteGroup(@Param('groupId') groupId: string) {
-    const result = await this.groupService.deleteGroup(Number(groupId));
-    return result;
+    return this.groupService.deleteGroup(Number(groupId));
   }
 }

@@ -8,8 +8,4 @@ export class CreatePostDto {
   @IsNotEmpty()
   @IsString()
   content: string;
-
-  @IsNotEmpty()
-  @IsString()
-  userId: string; // 작성자 ID
 }
