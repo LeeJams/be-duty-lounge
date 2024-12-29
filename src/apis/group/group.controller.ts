@@ -38,8 +38,9 @@ export class GroupController {
   // 특정 그룹의 디테일 정보 조회
   @Get(':groupId/details')
   @Auth()
-  async getGroupDetail(@Param('groupId') groupId: string) {
-    return this.groupService.getGroupDetail(Number(groupId));
+  async getGroupDetail(@Request() req, @Param('groupId') groupId: string) {
+    const userId = req.user.userId;
+    return this.groupService.getGroupDetail(userId, Number(groupId));
   }
 
   // 그룹에 속한 인원의 스케줄 조회

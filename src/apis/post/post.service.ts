@@ -122,7 +122,7 @@ export class PostService {
     page: number = 1,
     size: number = 30,
     search: string,
-    userId?: string,
+    userId?: number,
   ) {
     const skip = (page - 1) * size;
 

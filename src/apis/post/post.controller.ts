@@ -90,6 +90,16 @@ export class PostController {
     return this.postService.getPosts(Number(page), Number(size), search);
   }
 
+  @Get('/my')
+  async getMyPosts(
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('size') size: number = 30,
+  ) {
+    const userId = req.user.userId;
+    return this.postService.getPosts(Number(page), Number(size), '', userId);
+  }
+
   @Get('saved')
   @Auth()
   async getSavedPosts(

@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Shift, Prisma } from '@prisma/client';
 
@@ -49,9 +53,26 @@ export class ShiftService {
 
   // 근무조 수정 시 startTime과 endTime도 업데이트 가능하도록 처리
   async updateShift(
+    userId: number,
     id: number,
     shiftData: Prisma.ShiftUpdateInput,
   ): Promise<Shift> {
+    // 1. 해당 Shift가 존재하는지 확인
+    const existingShift = await this.prisma.shift.findUnique({
+      where: { id },
+    });
+
+    // 2. Shift가 없거나 요청한 userId가 다르면 에러 반환
+    if (!existingShift) {
+      throw new NotFoundException('Shift not found');
+    }
+    if (existingShift.userId !== userId) {
+      throw new UnauthorizedException(
+        'You are not authorized to update this shift',
+      );
+    }
+
+    // 3. 업데이트 수행
     return this.prisma.shift.update({
       where: { id },
       data: shiftData,

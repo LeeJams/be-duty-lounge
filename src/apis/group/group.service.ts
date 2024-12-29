@@ -73,7 +73,7 @@ export class GroupService {
   }
 
   // 그룹 상세 조회 - 그룹 기본 정보와 인원 리스트 조회
-  async getGroupDetail(groupId: number) {
+  async getGroupDetail(userId: number, groupId: number) {
     const group = await this.prisma.group.findUnique({
       where: { id: groupId },
       select: {
@@ -115,8 +115,8 @@ export class GroupService {
       id: group.id,
       name: group.name,
       description: group.description,
+      isOwner: users.find((user) => user.userId === userId)?.isOwner || false,
       users: users,
-      ownerId: users.find((user) => user.isOwner)?.userId,
     };
   }
 

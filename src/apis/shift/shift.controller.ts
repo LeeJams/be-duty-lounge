@@ -50,10 +50,16 @@ export class ShiftController {
   @Put(':shiftId')
   @Auth()
   async updateShift(
+    @Request() req,
     @Param('shiftId') shiftId: string,
     @Body() shiftData: Prisma.ShiftUpdateInput,
   ): Promise<Shift> {
-    return this.shiftService.updateShift(parseInt(shiftId, 10), shiftData);
+    const userId = req.user.userId;
+    return this.shiftService.updateShift(
+      userId,
+      parseInt(shiftId, 10),
+      shiftData,
+    );
   }
 
   @Delete(':shiftId')
