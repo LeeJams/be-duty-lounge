@@ -62,10 +62,16 @@ export class GroupController {
   @Post(':groupId/invite')
   @Auth()
   async inviteUserToGroup(
+    @Request() req,
     @Param('groupId') groupId: string,
     @Body() inviteUserDto: InviteUserDto,
   ) {
-    return this.groupService.inviteUserToGroup(Number(groupId), inviteUserDto);
+    const userId = req.user.userId;
+    return this.groupService.inviteUserToGroup(
+      userId,
+      Number(groupId),
+      inviteUserDto,
+    );
   }
 
   // 초대받은 사용자가 초대를 수락 또는 거절하는 API
@@ -85,10 +91,13 @@ export class GroupController {
   @Delete(':groupId/users/:inviteId')
   @Auth()
   async removeUserFromGroup(
+    @Request() req,
     @Param('groupId') groupId: string,
     @Param('inviteId') inviteId: string,
   ) {
+    const userId = req.user.userId;
     return this.groupService.removeUserFromGroup(
+      userId,
       Number(groupId),
       Number(inviteId),
     );

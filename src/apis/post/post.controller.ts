@@ -82,6 +82,7 @@ export class PostController {
   }
 
   @Get()
+  @Auth()
   async getPosts(
     @Query('page') page: number = 1,
     @Query('size') size: number = 30,
@@ -91,6 +92,7 @@ export class PostController {
   }
 
   @Get('/my')
+  @Auth()
   async getMyPosts(
     @Request() req,
     @Query('page') page: number = 1,

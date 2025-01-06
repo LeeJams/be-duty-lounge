@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // PrismaService 사용
 import { CreateGroupDto } from './dto/create-group.dto'; // 그룹 생성 DTO
 import { InviteUserDto } from './dto/invite-user.dto';
 import { RespondInviteDto } from './dto/respond-invite.dto';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class GroupService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService, // 알림 서비스 주입
+  ) {}
 
   async createGroup(userId: number, createGroupDto: CreateGroupDto) {
     const { groupName, nickName } = createGroupDto;
@@ -195,13 +199,35 @@ export class GroupService {
   }
 
   // 그룹에 사용자를 초대하는 메서드
-  async inviteUserToGroup(groupId: number, inviteUserDto: InviteUserDto) {
+  async inviteUserToGroup(
+    userId: number,
+    groupId: number,
+    inviteUserDto: InviteUserDto,
+  ) {
     // 사용자 코드로 사용자를 조회합니다.
     const user = await this.prisma.user.findUnique({
       where: { code: inviteUserDto.userCode },
     });
+
     if (!user) {
-      throw new Error('User not found');
+      throw new BadRequestException('존재하지 않는 사용자입니다.');
+    }
+
+    // 사용자가 스스로를 초대하려고 할 경우 예외 처리
+    if (user.id === userId) {
+      throw new BadRequestException('자신을 초대할 수 없습니다.');
+    }
+
+    // 이미 초대된 사용자인지 확인
+    const existingInvite = await this.prisma.groupUser.findFirst({
+      where: {
+        groupId,
+        userId: user.id,
+      },
+    });
+
+    if (existingInvite) {
+      throw new BadRequestException('이미 초대된 사용자입니다.');
     }
 
     // GroupUser에 초대 정보를 추가합니다.
@@ -212,6 +238,20 @@ export class GroupService {
         isJoined: false,
       },
     });
+
+    // 그룹명 조회
+    const group = await this.prisma.group.findUnique({
+      where: { id: groupId },
+    });
+
+    // 초대받은 사용자에게 알림 보내기
+    await this.notificationService.createNotification(
+      user.id,
+      'group_invite',
+      `${group.name}그룹에 초대되었습니다. 초대를 확인해보세요.`,
+      groupId,
+    );
+
     return groupUser;
   }
 
@@ -241,15 +281,50 @@ export class GroupService {
   }
 
   // 그룹에서 사용자를 강퇴하는 메서드
-  async removeUserFromGroup(groupId: number, inviteId: number) {
-    // GroupUser에서 사용자 정보를 삭제합니다.
-    await this.prisma.groupUser.deleteMany({
-      where: {
-        groupId: groupId,
-        id: inviteId,
+  async removeUserFromGroup(userId: number, groupId: number, inviteId: number) {
+    // 강퇴 대상 사용자를 조회
+    const groupUser = await this.prisma.groupUser.findUnique({
+      where: { id: inviteId },
+      select: {
+        userId: true,
+        isOwner: true,
+        group: {
+          select: { id: true, name: true },
+        },
       },
     });
-    return true;
+
+    if (!groupUser) {
+      throw new Error('User not found in this group.');
+    }
+
+    // 그룹 소유자 강퇴 방지
+    if (groupUser.isOwner) {
+      throw new Error('You cannot remove the group owner.');
+    }
+
+    // 사용자를 강퇴
+    await this.prisma.groupUser.delete({
+      where: { id: inviteId },
+    });
+
+    // 그룹정보 조회
+    const group = await this.prisma.group.findUnique({
+      where: { id: groupId },
+    });
+
+    // 강퇴된 사용자에게 알림 전송
+    await this.notificationService.createNotification(
+      groupUser.userId,
+      'group_kick',
+      `${group.name}그룹에서 강퇴되었습니다.`,
+      groupId,
+    );
+
+    return {
+      success: true,
+      message: `User with ID ${groupUser.userId} has been removed from the group.`,
+    };
   }
 
   // 그룹을 삭제하는 메서드

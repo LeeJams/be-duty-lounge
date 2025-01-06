@@ -97,14 +97,15 @@ model User {
   company        String?   @db.VarChar(255) // nullable로 설정
 
   // 관계 정의
-  posts      Post[] // 유저가 작성한 게시글 (1:N 관계)
-  comments   Comment[] // 유저가 작성한 댓글 (1:N 관계)
-  savedPosts Post[]      @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
-  likedPosts Post[]      @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
-  Shift      Shift[] // 유저가 속한 근무조 (1:N 관계)
-  Schedule   Schedule[] // 유저가 가진 스케줄 (1:N 관계)
-  Report     Report[]
-  GroupUser  GroupUser[]
+  posts        Post[] // 유저가 작성한 게시글 (1:N 관계)
+  comments     Comment[] // 유저가 작성한 댓글 (1:N 관계)
+  savedPosts   Post[]         @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
+  likedPosts   Post[]         @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
+  Shift        Shift[] // 유저가 속한 근무조 (1:N 관계)
+  Schedule     Schedule[] // 유저가 가진 스케줄 (1:N 관계)
+  Report       Report[]
+  GroupUser    GroupUser[]
+  Notification Notification[]
 
   @@unique([email, authProvider])
   @@index([code])
@@ -125,8 +126,9 @@ model Post {
   savedBy   User[]    @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)
   likedBy   User[]    @relation("LikedPosts") // 유저가 좋아요한 게시글 (다대다 관계)
 
-  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Report Report[]
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Report       Report[]
+  Notification Notification[]
 
   @@index([userId])
 }
@@ -170,12 +172,13 @@ model Report {
 }
 
 model Group {
-  id          Int         @id @default(autoincrement())
-  name        String      @db.VarChar(255) // 그룹 이름
-  description String?     @db.Text // 그룹 설명 (nullable)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @default(now()) @updatedAt
-  users       GroupUser[] // 그룹에 속한 유저들
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(255) // 그룹 이름
+  description  String?        @db.Text // 그룹 설명 (nullable)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+  users        GroupUser[] // 그룹에 속한 유저들
+  Notification Notification[]
 
   @@index([name])
 }
@@ -195,4 +198,22 @@ model GroupUser {
   @@unique([groupId, userId]) // 동일한 그룹에서 중복된 유저 방지
   @@index([groupId])
   @@index([userId])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int // 알림을 받을 사용자 ID
+  groupId   Int? // 그룹과 관련된 경우 그룹 ID (초대, 강퇴 등)
+  postId    Int? // 게시글과 관련된 경우 게시글 ID (코멘트 알림 등)
+  type      String // 알림 타입 (e.g., "group_invite", "group_kick", "comment")
+  title     String // 알림 제목 (프론트에 표시될 제목)
+  content   String // 알림 내용 (프론트에 표시될 내용)
+  path      String // 알림 클릭 시 이동할 경로
+  isRead    Boolean  @default(false) // 읽음 여부
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  post  Post?  @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
