@@ -79,11 +79,12 @@ export class UserService {
   }
 
   async getUserById(id: number): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { id },
+      include: {
+        company: true, // 유저와 연관된 회사 정보까지 한번에 조회
+      },
     });
-
-    return user;
   }
 
   async getUserByEmail(data: GetUserByEmailDto): Promise<User | null> {
@@ -132,7 +133,7 @@ export class UserService {
   async authenticateAndUpdateCompany(
     id: number,
     code: string,
-    company: string,
+    companyId: number,
   ): Promise<boolean> {
     // 1. code로 사용자 조회
     const userByCode = await this.prisma.user.findUnique({
@@ -150,16 +151,21 @@ export class UserService {
     }
 
     // 4. code로 조회된 사용자가 인증 회원인지 확인
-    if (!userByCode.company) {
+    if (!userByCode.companyId) {
       return false;
     }
 
-    // 5. id로 조회된 사용자의 company 필드 업데이트
+    // 5. id로 조회된 사용자의 companyId 업데이트
     await this.prisma.user.update({
       where: { id },
-      data: { company },
+      data: { companyId },
     });
 
     return true;
+  }
+
+  // 회사 리스트 조회
+  async getCompanyList() {
+    return this.prisma.company.findMany();
   }
 }

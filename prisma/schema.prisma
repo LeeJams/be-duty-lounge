@@ -83,6 +83,16 @@ model Comment {
   @@index([userId])
 }
 
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // 관계 설정
+  users User[]
+}
+
 model User {
   id             Int       @id @default(autoincrement())
   nickname       String    @db.VarChar(255)
@@ -94,9 +104,10 @@ model User {
   updatedAt      DateTime  @default(now()) @updatedAt
   deletedAt      DateTime?
   code           String    @unique @db.VarChar(6)
-  company        String?   @db.VarChar(255) // nullable로 설정
+  companyId      Int?
 
   // 관계 정의
+  company      Company?       @relation(fields: [companyId], references: [id])
   posts        Post[] // 유저가 작성한 게시글 (1:N 관계)
   comments     Comment[] // 유저가 작성한 댓글 (1:N 관계)
   savedPosts   Post[]         @relation("SavedPosts") // 유저가 저장한 게시글 (다대다 관계)

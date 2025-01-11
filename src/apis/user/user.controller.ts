@@ -44,14 +44,24 @@ export class UserController {
     return this.userService.deleteUser(userId);
   }
 
+  @Get('/company')
+  @Auth()
+  async getCompanyList() {
+    return this.userService.getCompanyList();
+  }
+
   @Patch('/company')
   @Auth()
   async updateCompany(
     @Request() req,
-    @Body() body: { code: string; company: string },
+    @Body() body: { code: string; companyId: string },
   ) {
     const userId = req.user.userId; // 토큰에서 추출된 userId 사용
-    const { code, company } = body;
-    return this.userService.authenticateAndUpdateCompany(userId, code, company);
+    const { code, companyId } = body;
+    return this.userService.authenticateAndUpdateCompany(
+      userId,
+      code,
+      Number(companyId),
+    );
   }
 }
