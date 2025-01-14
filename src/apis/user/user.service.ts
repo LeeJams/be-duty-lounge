@@ -15,7 +15,9 @@ export class UserService {
     private readonly shiftService: ShiftService,
   ) {}
 
-  async login(data: UserDto): Promise<{ user: User; token: string }> {
+  async login(
+    data: UserDto,
+  ): Promise<{ user: User; token: string; refreshToken: string }> {
     // 1. 이메일과 인증 제공자로 유저 조회
     const existingUser = await this.getUserByEmail({
       email: data.email,
@@ -47,12 +49,12 @@ export class UserService {
     }
 
     // 6. JWT 토큰 발행
-    const token = this.authService.generateJwtToken({
+    const { accessToken, refreshToken } = this.authService.generateJwtTokens({
       userId: user.id,
       email: user.email,
     });
 
-    return { user, token };
+    return { user, token: accessToken, refreshToken: refreshToken };
   }
 
   // 고유한 6자리 코드를 생성하는 함수

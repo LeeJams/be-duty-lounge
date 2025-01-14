@@ -57,6 +57,7 @@ export class CommentService {
         user: {
           select: {
             nickname: true,
+            company: true,
           },
         },
       },

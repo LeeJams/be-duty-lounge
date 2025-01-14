@@ -218,6 +218,7 @@ export class PostService {
         user: {
           select: {
             nickname: true,
+            company: true,
           },
         },
         files: true,
